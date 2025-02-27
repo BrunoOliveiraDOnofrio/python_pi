@@ -10,8 +10,8 @@ from datetime import datetime
 
 con = mysql.connector.connect(
    host="localhost", 
-   user="usuario_inseridor", 
-   passwd="inseridor123", 
+   user="Python", 
+   passwd="py", 
    db="opticar",
 )
 
@@ -19,10 +19,10 @@ servidor_id = 1
 
 componentes_ids =  {
         
-        "cpu": 2,
-        "ram" : 3,
-        "disco": 4,
-        "rede" : 5
+        "cpu": 1,
+        "ram" : 2,
+        "disco": 3,
+        "rede" : 4
     }
 
 
@@ -70,8 +70,8 @@ def monitoramento():
         print(f"|       Uso Disco {disco} %      |")
         print(f"| Disco Tempo Leitura {disco_tempo_Leitura} MB/s|")
         print(f"| Disco Tempo Escrita {disco_tempo_Escrita} MB/s|") 
-        print(f"| Rede Tempo Leitura {rede_leitura} GB|")
-        print(f"| Rede Tempo Escrita {rede_escrita} GB|")
+        print(f"| Rede Tempo Leitura {rede_leitura} GB |")
+        print(f"| Rede Tempo Escrita {rede_escrita} GB |")
         print("-------------------------------")
 
 
@@ -129,8 +129,8 @@ def dados(escolha):
         print(f"|       Uso Disco {disco} %      |")
         print(f"| Disco Tempo Leitura {disco_tempo_Leitura} MB/s|")
         print(f"| Disco Tempo Escrita {disco_tempo_Escrita} MB/s|") 
-        print(f"| Rede Tempo Leitura {rede_leitura} GB|")
-        print(f"| Rede Tempo Escrita {rede_escrita} GB|")
+        print(f"| Rede Tempo Leitura {rede_leitura} GB |")
+        print(f"| Rede Tempo Escrita {rede_escrita} GB |")
         print("-------------------------------")
         
         dados  = [
