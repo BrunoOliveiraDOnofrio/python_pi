@@ -5,13 +5,31 @@ import time
 import psutil
 import keyboard
 
+from datetime import datetime
+
 
 con = mysql.connector.connect(
    host="localhost", 
-   user="Python", 
-   passwd="py", 
-   db="py",
+   user="usuario_inseridor", 
+   passwd="inseridor123", 
+   db="opticar",
 )
+
+servidor_id = 1
+
+componentes_ids =  {
+        
+        "cpu": 2,
+        "ram" : 3,
+        "disco": 4,
+        "rede" : 5
+    }
+
+
+
+def zerar_tempo():
+    return  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 
 
 stop_event = threading.Event()
@@ -65,7 +83,8 @@ def dados(escolha):
     else:
         intervalo = 60  
 
-    sql = 'INSERT INTO hardware (cpu_percent, ram_percent, disco_percent, disco_leitura, disco_escrita, rede_leitura, rede_escrita) VALUES (%s,%s,%s,%s,%s,%s,%s)'
+    hora_inicio = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 
     count = intervalo
     mediaCPU = 0
@@ -113,10 +132,63 @@ def dados(escolha):
         print(f"| Rede Tempo Leitura {rede_leitura} GB|")
         print(f"| Rede Tempo Escrita {rede_escrita} GB|")
         print("-------------------------------")
+        
+        dados  = [
+            {
+                "valor": cpu,
+                "tipo": "Uso CPU",
+                "id_componente": componentes_ids.get('cpu'),
+                "unidade": '%'
+            },
+            {
+                "valor":ram,
+                "tipo": "Uso RAM",
+                "id_componente": componentes_ids.get('ram'),
+                "unidade": '%'
+            },
+            {
+                "valor": disco,
+                "tipo": "Uso DISCO",
+                "id_componente": componentes_ids.get('disco'),
+                "unidade": '%'
+            },
+            {
+                "valor": disco_tempo_Leitura,
+                "tipo": "DISCO Tempo Leitura",
+                "id_componente": componentes_ids.get('disco'),
+                "unidade": 'MB/s'
+            },
+            {
+                "valor": disco_tempo_Escrita,
+                "tipo": "DISCO Tempo Escrita",
+                "id_componente": componentes_ids.get('disco'),
+                "unidade": 'MB/s'
+            },
+            {
+                "valor": rede_leitura,
+                "tipo": "REDE Tempo Leitura",
+                "id_componente": componentes_ids.get('rede'),
+                "unidade": 'MB/s'
+            },
+            {
+                "valor":rede_escrita,
+                "tipo": "REDE Tempo Escrita",
+                "id_componente": componentes_ids.get('rede'),
+                "unidade": 'MB/s'
+            }
+        ]
 
+        # horaInicio = hora_inicio
+        sql = 'INSERT INTO captura (valorDado, tipoDado,  componente_id, unidade, dataInicio) VALUES (%s, %s,%s,%s,%s)'
         cursor = con.cursor()
-        cursor.execute(sql, (cpu, ram, disco, disco_tempo_Leitura, disco_tempo_Escrita, rede_leitura, rede_escrita))
+        for dado in dados:
+
+            cursor.execute(sql, (dado.get('valor'), dado.get('tipo'), dado.get('id_componente'), dado.get('unidade'), hora_inicio))
         con.commit()
+        hora_inicio = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        
+
 
 # Menu principal
 print("-----------------------------------------------------------")
@@ -149,3 +221,5 @@ historico.join()
 monitoramento_thread.join()
 
 print("Monitoramento finalizado.")
+
+
