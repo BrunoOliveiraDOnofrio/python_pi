@@ -129,8 +129,8 @@ def dados(escolha):
         print(f"|       Uso Disco {disco} %      |")
         print(f"| Disco Tempo Leitura {disco_tempo_Leitura} MB/s|")
         print(f"| Disco Tempo Escrita {disco_tempo_Escrita} MB/s|") 
-        print(f"| Rede Tempo Leitura {rede_leitura} GB |")
-        print(f"| Rede Tempo Escrita {rede_escrita} GB |")
+        print(f"| Rede Tempo Leitura {rede_leitura} MB/s |")
+        print(f"| Rede Tempo Escrita {rede_escrita} MB/s |")
         print("-------------------------------")
         
         dados  = [
