@@ -7,8 +7,8 @@ import keyboard
 
 con = mysql.connector.connect(
             host="localhost",
-            user="Python",
-            passwd="py",
+            user="root",
+            passwd="linkinpark",
             database="opticar"
         )
 
@@ -30,7 +30,7 @@ def definir_maquina():
             print("|                   Selecione uma máquina                 |")
             print("-----------------------------------------------------------")
             print("|                                                         ")
-            print(f"|      {linha.get("id")}- {linha.get("nome")}                  ")
+            print(f'|      {linha.get("id")}- {linha.get("nome")}                  ')
             print("|                                                         ")
             print("-----------------------------------------------------------")
 
@@ -56,7 +56,7 @@ def definir_componente(maquina):
             print("|                   Selecione um componente                |")
             print("-----------------------------------------------------------")
             print("|                                                         ")
-            print(f"|      {linha.get("id")}- {linha.get("tipo")}- {linha.get("descricao")}                  ")
+            print(f"|      {linha.get('id')}- {linha.get('tipo')}- {linha.get('descricao')}                  ")
             print("|                                                         ")
             print("-----------------------------------------------------------")
 
@@ -86,7 +86,7 @@ def definir_tempo():
                 print("Tempo inválido")
 
 def exibir(componente, interval):
-    sql = f"SELECT AVG(valorDado) as valor, tipoDado, unidade, timestampdiff(second, dataInicio, dataFinal) as tempo FROM captura WHERE componente_id = {componente} AND dataFinal between date_sub(now(), interval {interval} hour) AND now() GROUP BY tipoDado, unidade, tempo;"
+    sql = f"SELECT AVG(valorDado) as valor, tipoDado, unidade FROM captura WHERE componente_id = {componente} AND dataFinal between date_sub(now(), interval {interval} hour) AND now() GROUP BY tipoDado, unidade;"
     captura_sql = f"Select AVG(timestampdiff(second, dataInicio, dataFinal)) as tempo from captura where dataFinal between date_sub(now(), interval {interval} hour) AND now() and componente_id = {componente};"
     print(interval)
     cursor = con.cursor(dictionary=True)
@@ -105,15 +105,15 @@ def exibir(componente, interval):
         print("|                    Dados Registrados                    |")
         print("-----------------------------------------------------------")
         print("|                                                         |")
-        print(f"|            Valor: {linha.get("valor"):.2f} {linha.get("unidade")}                             ")
-        print(f"|            {linha.get("tipoDado")}                          ")
-        print(f"|            Tempo de captura: {linha.get("tempo")} Segundos                ")
+        print(f"|            Valor: {linha.get('valor'):.2f} {linha.get('unidade')}                             ")
+        print(f"|            {linha.get('tipoDado')}                          ")
+
         print("|                                                         |")
         print("-----------------------------------------------------------")
     if len(resultado) == 0:
         print("Sem registro")
     else:
-        print(f"Tempo médio de captura: {resultado[0].get("tempo")} segundos")
+        print(f"Tempo médio de captura: {resultado[0].get('tempo')} segundos")
 
 def exibir_geral(interval):
     sql = f"SELECT AVG(valorDado) as valor, tipoDado, unidade FROM captura WHERE dataFinal between date_sub(now(), interval {interval} hour) AND now() GROUP BY tipoDado, unidade;"
@@ -136,14 +136,14 @@ def exibir_geral(interval):
         print("|                    Dados Registrados                    |")
         print("-----------------------------------------------------------")
         print("|                                                         ")
-        print(f"|                 Valor: {linha.get("valor"):.2f} {linha.get("unidade")}                       ")
-        print(f"|                  {linha.get("tipoDado")}                     ")
+        print(f"|                 Valor: {linha.get('valor'):.2f} {linha.get('unidade')}                       ")
+        print(f"|                  {linha.get('tipoDado')}                     ")
         print("|                                                         ")
         print("-----------------------------------------------------------")
     if len(resultado) == 0:
         print("Sem registro")
     else:
-        print(f"Tempo médio de captura: {resultado[0].get("tempo")} segundos")
+        print(f"Tempo médio de captura: {resultado[0].get('tempo')} segundos")
 
 def main():
     rep = True

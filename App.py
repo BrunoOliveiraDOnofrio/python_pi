@@ -10,8 +10,8 @@ from datetime import datetime
 
 con = mysql.connector.connect(
    host="localhost", 
-   user="Python", 
-   passwd="py", 
+   user="usuario_inseridor", 
+   passwd="inseridor123", 
    db="opticar",
 )
 
@@ -19,10 +19,10 @@ servidor_id = 1
 
 componentes_ids =  {
         
-        "cpu": 1,
-        "ram" : 2,
-        "disco": 3,
-        "rede" : 4
+        "cpu": 2,
+        "ram" : 3,
+        "disco": 4,
+        "rede" : 5
     }
 
 
