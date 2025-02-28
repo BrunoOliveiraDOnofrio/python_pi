@@ -10,7 +10,7 @@ con = mysql.connector.connect(
             user="root",
             passwd="linkinpark",
             database="opticar"
-        )
+)
 
 # Funcionalidades Requeridas
 # Escolha da Máquina a ser Monitorada

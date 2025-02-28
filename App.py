@@ -15,15 +15,74 @@ con = mysql.connector.connect(
    db="opticar",
 )
 
-servidor_id = 1
+servidor_id = None
 
 componentes_ids =  {
         
-        "cpu": 2,
-        "ram" : 3,
-        "disco": 4,
-        "rede" : 5
-    }
+        "cpu": None,
+        "ram" : None,
+        "disco": None,
+        "rede" : None
+}
+## CAPTURAR COMPONENTES DE ACORDO COM O ID DO SERVIDOR
+while True:
+    servidor_id = input("Digite o Id do servidor:")
+    if(servidor_id.isalnum()):
+        cursor = con.cursor(dictionary=True)
+        sql = f"SELECT REPLACE(tipo,' ','') as tipo, id FROM componente WHERE servidor_id = {servidor_id}"
+        cursor.execute(sql)
+        componentes = cursor.fetchall()
+        
+        
+        cursor.close()
+        if len(componentes) > 0:
+            for componente in componentes:
+                print(componente.get("tipo") == "PlacadeRede")
+                if componente.get("tipo") == "CPU":
+                    id_cpu = componente.get("id")
+                    componentes_ids.update(cpu=id_cpu)            
+                elif componente.get("tipo") == "RAM":
+                    id_ram = componente.get("id")
+                    componentes_ids.update(ram=id_ram)
+                elif componente.get("tipo") == "Disco":
+                    id_disco = componente.get("id")
+                    componentes_ids.update(disco=id_disco)            
+                elif componente.get("tipo") == "PlacadeRede":
+                    
+                    id_rede = componente.get("id")
+                    print(id_rede)
+                    componentes_ids.update(rede=id_rede)            
+            break
+# TRAZER AS METRICAS DE ALERTA DA EMPRESA 
+def trazer_metricas():
+    cursor = con.cursor(dictionary=True)
+    sql = f"""
+    SELECT tipoMetrica, limiteCritico, limiteAtencao FROM alerta_config AS ac
+    JOIN empresa e
+    ON ac.empresa_id = e.id
+    JOIN fabrica f
+    ON e.id = f.empresa_id
+    JOIN servidor s 
+    ON f.id = s.fabrica_id
+    WHERE s.id = {servidor_id};
+    SELECT * from alerta_config;
+    """
+    cursor.execute(sql)
+    METRICAS_ALERTA = cursor.fetchall()
+    
+    cursor.close()
+
+    print(METRICAS_ALERTA)
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -181,9 +240,12 @@ def dados(escolha):
         # horaInicio = hora_inicio
         sql = 'INSERT INTO captura (valorDado, tipoDado,  componente_id, unidade, dataInicio) VALUES (%s, %s,%s,%s,%s)'
         cursor = con.cursor()
+        ids_inseridos = []
         for dado in dados:
 
             cursor.execute(sql, (dado.get('valor'), dado.get('tipo'), dado.get('id_componente'), dado.get('unidade'), hora_inicio))
+            ids_inseridos.append(cursor.lastrowid)
+            print(ids_inseridos)
         con.commit()
         hora_inicio = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -205,6 +267,7 @@ escolha = input()
 historico = threading.Thread(target=dados, args=(escolha,))
 monitoramento_thread = threading.Thread(target=monitoramento)
 
+trazer_metricas()
 
 historico.start()
 monitoramento_thread.start()
