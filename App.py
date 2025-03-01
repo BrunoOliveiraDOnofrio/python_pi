@@ -7,13 +7,14 @@ import keyboard
 
 from datetime import datetime
 
-
-con = mysql.connector.connect(
-   host="localhost", 
-   user="usuario_inseridor", 
-   passwd="inseridor123", 
-   db="opticar",
-)
+def conectar():
+    con = mysql.connector.connect(
+        host="localhost", 
+        user="usuario_inseridor", 
+        passwd="inseridor123", 
+        db="opticar",
+    )
+    return con
 
 servidor_id = None
 
@@ -28,6 +29,7 @@ componentes_ids =  {
 while True:
     servidor_id = input("Digite o Id do servidor:")
     if(servidor_id.isalnum()):
+        con = conectar()
         cursor = con.cursor(dictionary=True)
         sql = f"SELECT REPLACE(tipo,' ','') as tipo, id FROM componente WHERE servidor_id = {servidor_id}"
         cursor.execute(sql)
@@ -35,6 +37,7 @@ while True:
         
         
         cursor.close()
+        con.close()
         if len(componentes) > 0:
             for componente in componentes:
                 print(componente.get("tipo") == "PlacadeRede")
@@ -55,6 +58,7 @@ while True:
             break
 # TRAZER AS METRICAS DE ALERTA DA EMPRESA 
 def trazer_metricas():
+    con = conectar()
     cursor = con.cursor(dictionary=True)
     sql = f"""
     SELECT tipoMetrica, limiteCritico, limiteAtencao FROM alerta_config AS ac
@@ -71,6 +75,7 @@ def trazer_metricas():
     METRICAS_ALERTA = cursor.fetchall()
     
     cursor.close()
+    con.close()
 
     print(METRICAS_ALERTA)
 
@@ -129,8 +134,8 @@ def monitoramento():
         print(f"|       Uso Disco {disco} %      |")
         print(f"| Disco Tempo Leitura {disco_tempo_Leitura} MB/s|")
         print(f"| Disco Tempo Escrita {disco_tempo_Escrita} MB/s|") 
-        print(f"| Rede Tempo Leitura {rede_leitura} GB |")
-        print(f"| Rede Tempo Escrita {rede_escrita} GB |")
+        print(f"| Rede Tempo Leitura {rede_leitura} MB/s |")
+        print(f"| Rede Tempo Escrita {rede_escrita} MB/s |")
         print("-------------------------------")
 
 
@@ -153,7 +158,10 @@ def dados(escolha):
         cpu_list = []
         disco_leitura_list = []
         disco_escrita_list = []
-        
+        ram_percent_list = []
+        disco_percent_list = []
+        rede_leitura_list = []
+        rede_escrita_list = []
         for _ in range(intervalo):
             if stop_event.is_set():
                 return
@@ -164,7 +172,10 @@ def dados(escolha):
             disk_io_antes = psutil.disk_io_counters()
             time.sleep(1)
             disk_io_depois = psutil.disk_io_counters()
-            
+            ram_percent_list.append(psutil.virtual_memory().percent)
+            disco_percent_list.append(psutil.disk_usage('C:/').percent)
+            rede_leitura_list.append(round(psutil.net_io_counters().bytes_recv / (1024**2), 2))
+            rede_escrita_list.append(round(psutil.net_io_counters().bytes_sent / (1024**2), 2))
             tempo_intervalo = 1
             disco_leitura_list.append((disk_io_depois.read_bytes - disk_io_antes.read_bytes) / (tempo_intervalo * 1024**2))
             disco_escrita_list.append((disk_io_depois.write_bytes - disk_io_antes.write_bytes) / (tempo_intervalo * 1024**2))
@@ -173,9 +184,12 @@ def dados(escolha):
         disco_tempo_Leitura = round(sum(disco_leitura_list) / len(disco_leitura_list), 1)
         disco_tempo_Escrita = round(sum(disco_escrita_list) / len(disco_escrita_list), 1)
         ram = psutil.virtual_memory().percent
-        disco = psutil.disk_usage('C:/').percent
-        rede_leitura = round(psutil.net_io_counters().bytes_recv / (1024**2), 2)
-        rede_escrita = round(psutil.net_io_counters().bytes_sent / (1024**2), 2)
+        # disco = psutil.disk_usage('C:/').percent
+        disco = round(sum(disco_percent_list) / len(disco_percent_list), 1)
+        # rede_leitura = round(psutil.net_io_counters().bytes_recv / (1024**2), 2)
+        rede_leitura = round(sum(rede_leitura_list) / len(rede_leitura_list), 1)
+        # rede_escrita = round(psutil.net_io_counters().bytes_sent / (1024**2), 2)
+        rede_escrita = round(sum(rede_escrita_list) / len(rede_escrita_list))
 
         if stop_event.is_set():
             return 
@@ -236,8 +250,9 @@ def dados(escolha):
                 "unidade": 'MB/s'
             }
         ]
-
-        # horaInicio = hora_inicio
+        
+        
+        con = conectar()
         sql = 'INSERT INTO captura (valorDado, tipoDado,  componente_id, unidade, dataInicio) VALUES (%s, %s,%s,%s,%s)'
         cursor = con.cursor()
         ids_inseridos = []
@@ -247,10 +262,45 @@ def dados(escolha):
             ids_inseridos.append(cursor.lastrowid)
             print(ids_inseridos)
         con.commit()
+        con.close()
+        dados_validar_alerta = [
+            {
+                "registros": cpu_list,
+                "captura_id" : ids_inseridos[0]
+            },
+            {
+                "registros": ram_percent_list,
+                "captura_id" : ids_inseridos[1]
+            },
+            {
+                "registros": disco_percent_list,
+                "captura_id" : ids_inseridos[2]
+            },
+            {
+                "registros": disco_leitura_list,
+                "captura_id" : ids_inseridos[3]
+            },
+            {
+                "registros": disco_escrita_list,
+                "captura_id" : ids_inseridos[4]
+            },
+            {
+                "registros": rede_leitura_list,
+                "captura_id" : ids_inseridos[5]
+            },
+            {
+                "registros": rede_escrita_list,
+                "captura_id" : ids_inseridos[6]
+            }
+        ]
+        comparar_registro_metricas_alerta(dados_validar_alerta)
+        
         hora_inicio = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         
-
+def comparar_registro_metricas_alerta(registros):
+    metricas = trazer_metricas()
+    print(registros)
 
 # Menu principal
 print("-----------------------------------------------------------")
@@ -267,7 +317,7 @@ escolha = input()
 historico = threading.Thread(target=dados, args=(escolha,))
 monitoramento_thread = threading.Thread(target=monitoramento)
 
-trazer_metricas()
+
 
 historico.start()
 monitoramento_thread.start()
