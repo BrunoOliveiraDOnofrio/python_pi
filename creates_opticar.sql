@@ -134,6 +134,15 @@ CREATE TABLE alerta(
     ,CONSTRAINT chkStatus CHECK(status IN ('Aberto', 'Em Andamento', 'Fechado'))
 );
 
+CREATE TABLE processo(
+	id INT PRIMARY KEY AUTO_INCREMENT 
+    ,name VARCHAR(255) NOT NULL
+    ,pid VARCHAR(50) NOT NULL
+    ,status VARCHAR(10)
+    ,alerta_id INT 
+    ,CONSTRAINT fkProcessoAlerta FOREIGN KEY (alerta_id) REFERENCES alerta(id)
+);
+
 
 
 

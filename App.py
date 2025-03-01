@@ -26,6 +26,7 @@ componentes_ids =  {
         "disco": None,
         "rede" : None
 }
+
 ## CAPTURAR COMPONENTES DE ACORDO COM O ID DO SERVIDOR
 while True:
     servidor_id = input("Digite o Id do servidor:")
@@ -70,14 +71,14 @@ def trazer_metricas():
     JOIN servidor s 
     ON f.id = s.fabrica_id
     WHERE s.id = {servidor_id};
-    SELECT * from alerta_config;
+    
     """
     cursor.execute(sql)
     METRICAS_ALERTA = cursor.fetchall()
     
     cursor.close()
     con.close()
-
+    return METRICAS_ALERTA
     print(METRICAS_ALERTA)
 
 
@@ -267,31 +268,39 @@ def dados(escolha):
         dados_validar_alerta = [
             {
                 "registros": cpu_list,
-                "captura_id" : ids_inseridos[0]
+                "captura_id" : ids_inseridos[0],
+                "tipo" : "CPU"
             },
             {
                 "registros": ram_percent_list,
-                "captura_id" : ids_inseridos[1]
+                "captura_id" : ids_inseridos[1],
+                "tipo" : "RAM"
             },
             {
                 "registros": disco_percent_list,
-                "captura_id" : ids_inseridos[2]
+                "captura_id" : ids_inseridos[2],
+                "tipo" : "DISCO"
             },
             {
                 "registros": disco_leitura_list,
-                "captura_id" : ids_inseridos[3]
+                "captura_id" : ids_inseridos[3],
+                "tipo" : "DISCO_LEITURA"
             },
             {
                 "registros": disco_escrita_list,
-                "captura_id" : ids_inseridos[4]
+                "captura_id" : ids_inseridos[4],
+                "tipo" : "DISCO_ESCRITA"
             },
             {
                 "registros": rede_leitura_list,
-                "captura_id" : ids_inseridos[5]
+                "captura_id" : ids_inseridos[5],
+                "tipo" : "REDE_LEITURA"
             },
             {
                 "registros": rede_escrita_list,
-                "captura_id" : ids_inseridos[6]
+                "captura_id" : ids_inseridos[6],
+                "tipo" : "REDE_ESCRITA"
+
             }
         ]
         comparar_registro_metricas_alerta(dados_validar_alerta)
@@ -301,7 +310,90 @@ def dados(escolha):
         
 def comparar_registro_metricas_alerta(registros):
     metricas = trazer_metricas()
-    print(registros)
+    alertas = []
+    for registro in registros:
+        for metrica in metricas:
+            if registro.get("tipo") == metrica.get("tipoMetrica"):
+                lista_registros = registro.get("registros")
+                limiteCritico = metrica.get("limiteCritico")
+                limiteAtencao = metrica.get("limiteAtencao")
+                alertaCritico = True
+                alertaAtencao = True
+                for registro_atual in lista_registros:
+                    if registro_atual <= limiteAtencao:
+                        alertaAtencao = False
+                    if registro_atual <= limiteCritico:
+                        alertaCritico = False
+                    if not alertaCritico and not alertaAtencao:
+                        break 
+                if alertaCritico or alertaAtencao:
+                    gravidade_alerta = ""
+                    if alertaCritico:
+                        gravidade_alerta = "Grave"
+                    elif alertaAtencao:
+                        gravidade_alerta = "Atenção"
+                    tipo_componente_alerta = registro.get("tipo")
+                    data_hora_alerta = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    captura_id_alerta = registro.get("captura_id")
+                    alerta_dados = {
+                        "gravidade" : gravidade_alerta,
+                        "descricao" : f"Registro ultrapassando limites na {tipo_componente_alerta}",
+                        "dataHora" : data_hora_alerta,
+                        "captura_id" : captura_id_alerta,
+                        "status" : "Aberto",
+                    }    
+                    inserir_alerta(alerta_dados)
+
+
+def inserir_alerta(dados):
+    con = conectar()
+    gravidade = dados.get("gravidade")
+    descricao = dados.get("descricao")
+    dataHora = dados.get("dataHora")
+    captura_id = dados.get("captura_id")
+    status = dados.get("status")
+
+    sql = "INSERT INTO alerta (gravidade, descricao, dataHora, captura_id, status) VALUES (%s, %s, %s, %s, %s)"
+
+    cursor = con.cursor()
+    cursor.execute(sql, (gravidade, descricao, dataHora, captura_id, status))
+    alerta_id = cursor.lastrowid
+    con.commit()
+
+    cursor.close()
+    con.close()
+    print("-----------------------------------------------------------")
+    print("|             Alerta inserido com sucesso!                |")
+    print("-----------------------------------------------------------")
+    print(f"|                  Gravidade: {gravidade}                |")
+    print(f"|                  Descricao: {descricao}                |")
+    print(f"|                 Data e Hora: {dataHora}                |")
+    print(f"|                  Status: {status}                      |")
+    print("-----------------------------------------------------------")
+    inserir_processos(alerta_id)
+
+def inserir_processos(alerta_id):
+    con = conectar()
+    cursor = con.cursor()
+    sql = f"INSERT INTO processo (name, pid, status,alerta_id ) VALUES (%s, %s, %s, {alerta_id})"
+    qtdprocessos = 0
+    for processos in psutil.process_iter():
+        try:
+            pid = processos.ppid()
+            name = processos.name()
+            status = processos.status()
+            cursor.execute(sql, (name, pid, status))
+            qtdprocessos = qtdprocessos + 1
+        except Exception as err:
+            print(err)
+    con.commit()
+    cursor.close()
+    con.close()    
+    print("-----------------------------------------------------------")
+    print("|             Processos relacionados ao alerta inseridos no banco                |")
+    print("-----------------------------------------------------------")
+    print(f"|                  Quantidade : {qtdprocessos}                |")
+    print("-----------------------------------------------------------")
 
 # Menu principal
 print("-----------------------------------------------------------")
