@@ -86,7 +86,7 @@ def trazer_metricas():
 
 
 
-def zerar_tempo():
+def zerar_():
     return  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
