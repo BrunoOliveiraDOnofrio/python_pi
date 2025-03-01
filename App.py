@@ -10,7 +10,7 @@ from datetime import datetime
 
 con = mysql.connector.connect(
    host="localhost", 
-   user="usuario_inseridor", 
+   user="usuario_batata", 
    passwd="inseridor123", 
    db="opticar",
 )
