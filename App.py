@@ -7,15 +7,6 @@ import keyboard
 
 from datetime import datetime
 
-<<<<<<< HEAD
-
-con = mysql.connector.connect(
-   host="localhost", 
-   user="usuario_batata", 
-   passwd="inseridor123", 
-   db="opticar",
-)
-=======
 def conectar():
     con = mysql.connector.connect(
         host="localhost", 
@@ -24,7 +15,7 @@ def conectar():
         db="opticar",
     )
     return con
->>>>>>> aca32b50ac8b347caa6aece209139e56136a1449
+
 
 servidor_id = None
 
