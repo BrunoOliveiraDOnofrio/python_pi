@@ -3,6 +3,7 @@ import mysql.connector
 import time
 import psutil
 
+import os
 
 from datetime import datetime
 
@@ -25,6 +26,7 @@ componentes_ids =  {
         "disco": None,
         "rede" : None
 }
+## Verificando informações do servidor
 
 ## CAPTURAR COMPONENTES DE ACORDO COM O ID DO SERVIDOR
 while True:
@@ -36,9 +38,60 @@ while True:
         cursor.execute(sql)
         componentes = cursor.fetchall()
         
+        # comando powershell pega IP
+        comando = 'powershell.exe ipconfig | findstr "Endereço IPv4"'
+        saida = os.popen(comando).read().strip()
+        ipv4 = saida.split(":")[-1].strip()
+
+        print(f"Endereço IPv4: {ipv4}")
+        # comando powershell pega IP
+        # Pegando o Nome
+        print(f"Nome: {os.environ['COMPUTERNAME']}")
+        # Pegando o Nome
+        #comando para pegar o status
+        comando = 'powershell.exe systeminfo | findstr "Status:"'
+        saida = os.popen(comando).read().strip()
+        status = saida.split(":")[-1].strip()
+        print(f"Status: {status}")
+        #comando para pegar o status
+        #Capacidade RAM
+        print(f"Capacidade RAM: {psutil.swap_memory().total / (1024 ** 2):.2f} MB/s")
+        #Capacidade RAM
+        #Capacidade DISCO
+        print(f"Capacidade DISCO: {psutil.disk_usage('/').total / (1024 ** 2):.2f} MB/s")
+        #Capacidade DISCO
+        #Tipo DISCO
+        disco = psutil.disk_partitions()[0]
+        if "SSD" in disco.device:
+            tipo_disco = "SSD"
+        else:
+            tipo_disco = "HD"
+        print(f"Tipo de Disco: {tipo_disco}")
+        #Tipo DISCO
+        # Comando no powershell pega FABRICANTE
+        comando = 'powershell Get-WmiObject -Class Win32_ComputerSystem'
+        saida = os.popen(comando).read().strip()
+        for linha in saida.split("\n"):
+            if "Manufacturer" in linha:
+                fabricante = linha.split(":")[1].strip()
+                print(f"Fabricante: {fabricante}")
+        # Comando no powershell pega FABRICANTE
+        # Comando powershell para pegar a DT DE INTALACAO
+        comando = 'powershell.exe systeminfo | findstr "Data da instalação original"'
+        saida = os.popen(comando).read().strip()
+        dt = saida.split(":")[2].strip().split(",")[0].strip()
+        print(f"Data de instalação {dt}")
+        # Comando powershell para pegar a DT DE INTALACAO
+        #pegando o SO
+        print(f"Sistema Operacional: {os.environ['OS']}")
+        #pegando o SO
+        
+
         
         cursor.close()
         con.close()
+        #Verificando se o servidor já está cadastrado
+
         if len(componentes) > 0:
             for componente in componentes:
                 print(componente.get("tipo") == "PlacadeRede")
