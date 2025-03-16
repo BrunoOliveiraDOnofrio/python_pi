@@ -26,17 +26,18 @@ componentes_ids =  {
         "disco": None,
         "rede" : None
 }
+insercao = False
 ## Verificando informações do servidor
 
 ## CAPTURAR COMPONENTES DE ACORDO COM O ID DO SERVIDOR
 while True:
     servidor_id = input("Digite o Id do servidor:")
     if(servidor_id.isalnum()):
-        con = conectar()
-        cursor = con.cursor(dictionary=True)
-        sql = f"SELECT REPLACE(tipo,' ','') as tipo, id FROM componente WHERE servidor_id = {servidor_id}"
-        cursor.execute(sql)
-        componentes = cursor.fetchall()
+        # con = conectar()
+        # cursor = con.cursor(dictionary=True)
+        # sql = f"SELECT REPLACE(tipo,' ','') as tipo, id FROM componente WHERE servidor_id = {servidor_id}"
+        # cursor.execute(sql)
+        # componentes = cursor.fetchall()
         
         # comando powershell pega IP
         comando = 'powershell.exe ipconfig | findstr "Endereço IPv4"'
@@ -88,11 +89,11 @@ while True:
         
 
         
-        cursor.close()
-        con.close()
+        # cursor.close()
+        # con.close()
         #Verificando se o servidor já está cadastrado
 
-        if len(componentes) > 0:
+        if insercao and len(componentes) > 0:
             for componente in componentes:
                 print(componente.get("tipo") == "PlacadeRede")
                 if componente.get("tipo") == "CPU":
@@ -109,6 +110,8 @@ while True:
                     id_rede = componente.get("id")
                     print(id_rede)
                     componentes_ids.update(rede=id_rede)            
+            break
+        else:
             break
 # TRAZER AS METRICAS DE ALERTA DA EMPRESA 
 def trazer_metricas():
@@ -182,7 +185,6 @@ def monitoramento(escolha):
         rede_escrita = round(psutil.net_io_counters().bytes_sent / (1024**2), 2)    
 
         cpu_list.append(cpu)
-        print(len(cpu_list))
         disco_leitura_list.append(disco_tempo_Leitura)
         disco_escrita_list.append(disco_tempo_Escrita)
         ram_percent_list.append(ram)
@@ -204,7 +206,7 @@ def monitoramento(escolha):
         print(f"| Rede Tempo Escrita {rede_escrita} MB/s |")
         print("-------------------------------")
 
-        if len(cpu_list) >= intervalo:
+        if len(cpu_list) >= intervalo and insercao:
             time.sleep(1)
             cpu = round(sum(cpu_list) / len(cpu_list), 2)
             disco_tempo_Leitura = round(sum(disco_leitura_list) / len(disco_leitura_list), 1)
