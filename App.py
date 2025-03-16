@@ -75,9 +75,16 @@ while True:
         # sql = f"SELECT REPLACE(tipo,' ','') as tipo, id FROM componente WHERE servidor_id = {servidor_id}"
         # cursor.execute(sql)
         # componentes = cursor.fetchall()
-        
-        if({os.environ['OS']} == 'windows_NT'):
-            # comando powershell pega IP
+
+        try:
+            so = os.uname()
+            print(f"Sistema Operacional: {so}")
+        except Exception:
+            so = os.environ['OS']
+
+        print(so)
+        if(so == 'Windows_NT'):
+             # comando powershell pega IP
             comando = 'powershell.exe ipconfig | findstr "Endereço IPv4"'
             saida = os.popen(comando).read().strip()
             ipv4 = saida.split(":")[-1].strip()
