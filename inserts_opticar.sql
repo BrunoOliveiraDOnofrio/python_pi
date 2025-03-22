@@ -1,3 +1,5 @@
+USE opticar;
+
 INSERT INTO empresa (nome, cnpj, porte, fabricas, foto) 
 VALUES 
     ('AutoTech Indústria', '12345678000190', 'grande', 3, null),

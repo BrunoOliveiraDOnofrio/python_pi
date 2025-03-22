@@ -27,6 +27,8 @@ componentes_ids =  {
         "rede" : None
 }
 insercao = False
+
+disco_so = ""
 ## Verificando informações do servidor
 
 def get_linux_info():
@@ -84,6 +86,7 @@ while True:
 
         print(so)
         if(so == 'Windows_NT'):
+            disco_so = "C:/"
              # comando powershell pega IP
             comando = 'powershell.exe ipconfig | findstr "Endereço IPv4"'
             saida = os.popen(comando).read().strip()
@@ -132,6 +135,7 @@ while True:
             print(f"Sistema Operacional: {os.environ['OS']}")
             #pegando o SO
         else:
+            disco_so = "/"
             get_linux_info()
         
         
@@ -215,7 +219,7 @@ def monitoramento(escolha):
         # Coletando dados do sistema
         cpu = psutil.cpu_percent(interval=1)
         ram = psutil.virtual_memory().percent
-        disco = psutil.disk_usage('C:/').percent
+        disco = psutil.disk_usage(disco_so).percent
         # Captura os dados iniciais
         disk_io_antes = psutil.disk_io_counters()
         time.sleep(1)  # Intervalo de tempo para medir a taxa
